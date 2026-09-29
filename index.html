@@ -73,6 +73,8 @@ header{display:flex;flex-direction:column;gap:14px}
 .chip[aria-selected="true"]{background:var(--pri);color:var(--pri-fg);border-color:transparent}
 .chip .n{font-family:var(--mono);font-size:10.5px;background:var(--red);color:#fff;border-radius:999px;padding:0 5px;line-height:16px;min-width:16px;text-align:center}
 .chip[aria-selected="true"] .n{background:var(--pri-fg);color:var(--pri)}
+.phone .chips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;padding:12px 10px 10px;overflow:visible}
+.phone .chip{justify-content:center;gap:4px;padding:5px 2px;font-size:11px;min-width:0}
 .mini-dot{display:inline-block;width:6px;height:6px;flex:none;border-radius:50%;background:#2864ec}.web-trigger .mini-dot{width:7px;height:7px;min-width:0;padding:0;top:5px;right:4px;background:#2864ec}
 .row[role="button"]{cursor:pointer}.row[role="button"]:hover{background:var(--muted)}
 .list{display:flex;flex-direction:column}
@@ -257,7 +259,7 @@ table.cmpdoc td:first-child{font-weight:600}
 <header>
   <div class="eyebrow">NeoDrop · 通知策略 · 2026-09-28</div>
   <h1>通知体验改造</h1>
-  <p class="lede">保留四个分类。需要处理的事靠前，订阅频道的新内容以标题呈现；关注和回复比点赞更值得提醒。App Push 是独立送达渠道，站内消息与已读状态在 App、Web 共用。下面用同一天的示例事件，对照现状和提案。</p>
+  <p class="lede">保留四个分类。需要处理的事靠前，订阅频道的新内容以标题呈现；关注和回复比点赞更值得提醒。App Push 是独立送达渠道，站内消息与已读状态在 App、Web 共用。下面对照旧策略示例与提案，不代表线上实时状态。</p>
   <div class="meta"><span>产品策略评审原型 · 2026.09.29 修订</span><span>示例事件为演示数据，不用于效果预测</span></div>
 </header>
 
@@ -265,6 +267,7 @@ table.cmpdoc td:first-child{font-weight:600}
 <section id="prototype">
   <div class="eyebrow">原型</div>
   <h2>同一天，两套规则，左右对照</h2>
+  <p class="sub" id="comparison-scope"></p>
   <p class="sub">完整策略以方案文档为准；这里演示部分场景。<button class="play" id="like-demo" type="button">点赞聚合示例</button></p>
   <div class="ctrlbar">
     <div class="ctrl-row">
@@ -318,10 +321,10 @@ table.cmpdoc td:first-child{font-weight:600}
       <h3>可以试试</h3>
       <ol class="try">
         <li>看两边的锁屏推送：左边凌晨 00:40 就开始响，一天响四十多次，两条告警一条都没响。</li>
-        <li>点「播放这一天」，或把时间拖到 07:59 再拖到 08:00：右边夜里攒下的动态在 08:00 合成一条送达，告警单独送。</li>
+        <li>把时间从 07:59 拖到 08:00：默认示例的夜间告警延后送达。已开启的内容与互动若也有夜间待发，则按优先级分别汇总。</li>
         <li>在右边「新内容」分类查看各篇标题；点某个频道的推送开关，只改变 App Push。</li>
         <li>切到通知设置：保留逐频道选择，将关注与点赞分级。关闭点赞推送后，站内消息仍在。</li>
-        <li>关掉「预设两次全部已读」，模拟一整天没有主动清除通知，对比两边角标。</li>
+        <li>关掉「预设两次全部已读」，查看当天全部未读；“重置演示已读”也会进入这个场景。分类数字始终等于未读条目数。</li>
       </ol>
       <p class="scenario">示例用户创建了两个频道，也订阅了其他频道；新内容提醒统一按订阅者身份处理，不因频道由自己创建而单独成类。示例包含内容、互动、运行告警和账户积分告警。人物与标题均为虚构。右侧时间与频控数值是待评审参数，不代表已上线规则。</p>
     </div>
@@ -386,7 +389,7 @@ table.cmpdoc td:first-child{font-weight:600}
   const E = [];
   Object.entries(SUBS).forEach(([ch, list]) => list.forEach(([t, title]) => E.push({ t: m(t), k: 'sub', ch, title })));
   [['06:30','c2','g3'],['07:00','c1','g1'],['12:00','c1','g2'],['19:00','c1','g4']].forEach(([t, ch, g]) => E.push({ t: m(t), k: 'own', ch, title: G[g] }));
-  E.push({ t: m('04:10'), k: 'alert', key: 'run_failed', ch: 'c2', text: '「夜读摘要」本次生产失败，自动重试 2 次仍未成功' });
+  E.push({ t: m('04:10'), k: 'alert', key: 'run_failed', ch: 'c2', text: '「夜读摘要」本次生产失败，请查看运行记录' });
   E.push({ t: m('16:40'), k: 'alert', key: 'credits_exhausted', text: '账户积分已用尽，相关频道的生产已暂停' });
   E.push({ t: m('10:05'), k: 'info', text: '你收到 200 积分（邀请奖励）' });
   const likes = [['06:35','g3','小满'],['06:50','g3','阿澄'],['07:10','g3','墨白'],['07:05','g1','青禾'],['07:06','g1','知远'],['07:20','g1','若水'],['07:41','g1','听松'],['08:02','g1','半夏'],['09:30','g1','小满'],['08:40','g1','林夏'],['13:05','g1','周远'],['12:03','g2','阿澄'],['12:05','g2','墨白'],['12:32','g2','青禾'],['13:40','g2','知远'],['14:20','g2','苏禾'],['19:02','g4','若水'],['19:04','g4','听松'],['19:20','g4','半夏'],['20:15','g4','小满'],['21:40','g4','陈可'],['22:15','g4','林夏']];
@@ -406,13 +409,14 @@ table.cmpdoc td:first-child{font-weight:600}
   E.forEach((event, index) => { event.id = String(index); });
   const readEvents = new Map();
   const resolvedEvents = new Map();
+  const addedKinds = new Set(['chat', 'settlement', 'membership']);
 
   const state = {
-    screen: 'list', p: { cur: { tab: 'all', sub: null }, new: { tab: 'all', sub: null } }, T: 1439, reads: true,
+    screen: 'list', p: { cur: { tab: 'all', sub: null, scrolls: new Map() }, new: { tab: 'all', sub: null, scrolls: new Map() } }, T: 1439, reads: true,
     cfg: { pushOn: true, comments: true, following: true, likes: false, alerts:true, receipts:false, results:true, membership:true, deviceAllowed:true, subMode: 'bell', marketing: false, bells: new Set(['tk']), cap: 5, quiet: true, alertQuiet: true, digestAt: m('18:00'), includeAI: false }
   };
 
-  function deliveryPlan(cfg, T, R) {
+  function deliveryPlan(cfg, T, R, eventsForDay = E) {
     const pending = new Map(), sent = new Set(), out = [], channels = new Map(), used = new Map();
     let suppressed = 0, tomorrow = 0;
     const unreadAt = (e, at) => !R.some(t => t >= e.t && t <= at) && !(readEvents.has(e.id) && readEvents.get(e.id) <= at) && !(resolvedEvents.has(e.id) && resolvedEvents.get(e.id) <= at);
@@ -432,7 +436,7 @@ table.cmpdoc td:first-child{font-weight:600}
       if (!pending.has(id)) pending.set(id, {t:at, events:[], digest});
       pending.get(id).events.push(...events);
     };
-    for (const e of E.filter(e => e.t <= T)) {
+    for (const e of eventsForDay.filter(e => e.t <= T)) {
       if (!enabled(e)) continue;
       if (cfg.subMode === 'digest' && ['sub','own'].includes(e.k)) continue;
       let at = e.t, key = e.id;
@@ -442,10 +446,10 @@ table.cmpdoc td:first-child{font-weight:600}
       enqueue(at, key, [e]);
     }
     if (cfg.subMode === 'digest') {
-      enqueue(cfg.digestAt, 'digest', E.filter(e => ['sub','own'].includes(e.k) && e.t <= cfg.digestAt && cfg.bells.has(e.ch)), true);
-      enqueue(1440 + cfg.digestAt, 'digest-next', E.filter(e => ['sub','own'].includes(e.k) && e.t > cfg.digestAt && e.t <= T && cfg.bells.has(e.ch)), true);
+      enqueue(cfg.digestAt, 'digest', eventsForDay.filter(e => ['sub','own'].includes(e.k) && e.t <= cfg.digestAt && cfg.bells.has(e.ch)), true);
+      enqueue(1440 + cfg.digestAt, 'digest-next', eventsForDay.filter(e => ['sub','own'].includes(e.k) && e.t > cfg.digestAt && e.t <= T && cfg.bells.has(e.ch)), true);
     }
-    enqueue(m('20:00'), 'alerts-summary', E.filter(e => e.k === 'alert' && e.t <= m('20:00')));
+    enqueue(m('20:00'), 'alerts-summary', eventsForDay.filter(e => e.k === 'alert' && e.t <= m('20:00')));
     const get = key => used.get(key) || 0;
     const add = key => used.set(key, get(key) + 1);
     if (!cfg.pushOn || !cfg.deviceAllowed) return {out, suppressed, tomorrow, pendingNight:0};
@@ -460,12 +464,12 @@ table.cmpdoc td:first-child{font-weight:600}
       events = events.filter(e => isContent(e) ? (channels.get(e.ch) || 0) < 2 && get('content') < 4 : !limits[e.k] || get(e.k) < limits[e.k]);
       if (!events.length || get(t) >= (t === 'p0' ? (batch.t < m('20:00') ? 2 : 3) : t === 'p1' ? 5 : cfg.cap)) { suppressed++; continue; }
       add(t); new Set(events.map(e=>e.k)).forEach(add);
-      const contentEvents = events.filter(isContent), content = contentEvents.length === events.length;
+      const contentEvents = events.filter(isContent);
       if (contentEvents.length) { add('content'); new Set(contentEvents.map(e=>e.ch)).forEach(ch => channels.set(ch,(channels.get(ch)||0)+1)); }
       events.forEach(e=>sent.add(e.id));
       const first = events[0];
       let text;
-      if (content) text = events.map(e=>e.title).slice(0,2).join('；') + (events.length>2 ? ` 等 ${events.length} 篇内容` : '');
+      if (contentEvents.length) text = contentEvents.map(e=>e.title).slice(0,2).join('；') + (contentEvents.length>2 ? ` 等 ${contentEvents.length} 篇内容` : '') + (events.length>contentEvents.length ? `；另有 ${events.length-contentEvents.length} 条提醒` : '');
       else if (events.every(e=>e.k==='like')) text = new Set(events.map(e=>e.g)).size > 1 ? `你的 ${new Set(events.map(e=>e.g)).size} 篇内容收到 ${events.length} 个赞` : `${events.length} 人赞了《${G[first.g]}》`;
       else if (events.length > 1) text = `${events.length} 条${t === 'p0' ? '待处理提醒' : '新动态'}`;
       else text = first.text || (first.k === 'follow' ? `${first.a} 关注了你` : first.k === 'subscribe' ? `${first.a} 订阅了「${CH[first.ch].name}」` : `${first.a} ${first.k === 'reply' ? '回复了你' : first.k === 'repost' ? '转发了' : '评论了'}《${G[first.g]}》${first.q ? '：'+first.q : ''}`);
@@ -474,7 +478,7 @@ table.cmpdoc td:first-child{font-weight:600}
     return {out,suppressed,tomorrow,pendingNight:0};
   }
 
-  function sim(mode, cfg, T, useReads) {
+  function sim(mode, cfg, T, useReads, eventsForDay = E) {
     const R = useReads ? READS : [];
     let lastRead = -1, ri = 0, droppedHuman = 0;
     const rows = [], open = new Map(), cand = [], subSeen = [];
@@ -482,7 +486,7 @@ table.cmpdoc td:first-child{font-weight:600}
     const get = key => { const r = open.get(key); if (r && r.t > lastRead && !(mode === 'new' && r.ids.every(id => readEvents.has(id) && readEvents.get(id) <= activeEvent.t))) { r.ids.push(activeEvent.id); return r; } return null; };
     const add = (row, key) => { row.ids = [activeEvent.id]; rows.push(row); if (key) open.set(key, row); return row; };
     const verb = { like: '赞了', repost: '转发了' };
-    for (const e of E) {
+    for (const e of eventsForDay) {
       if (e.t > T) break;
       activeEvent = e;
       while (ri < R.length && R[ri] <= e.t) { lastRead = R[ri]; ri++; }
@@ -516,7 +520,7 @@ table.cmpdoc td:first-child{font-weight:600}
     }
     while (ri < R.length && R[ri] <= T) { lastRead = R[ri]; ri++; }
 
-    const plan = mode === 'new' ? deliveryPlan(cfg, T, R) : {out:cand, suppressed:0, tomorrow:0, pendingNight:0};
+    const plan = mode === 'new' ? deliveryPlan(cfg, T, R, eventsForDay) : {out:cand, suppressed:0, tomorrow:0, pendingNight:0};
     const {out, suppressed, tomorrow, pendingNight} = plan;
 
     const counts = r => {
@@ -637,7 +641,6 @@ table.cmpdoc td:first-child{font-weight:600}
       const top = pinned.length ? `<div class="tsec pin"><span>需要处理</span><span></span></div>${pinned.map(r => renderNewRow(r, cfg)).join('')}` : '';
       items = top + dateSections(rest, r => renderNewRow(r, cfg));
     }
-    const total = cur ? s.rows.filter(r => r.unread).length : s.badge;
     return `${statusBar()}<div class="topbar"><button class="icon-btn" type="button" aria-label="打开菜单">${ICON.menu}</button><div class="t">通知</div><div class="right-icons">${cur ? '' : `<button class="icon-btn" type="button" data-screen-go="settings" aria-label="通知设置" title="通知设置">${ICON.gear}</button>`}<button class="icon-btn" type="button" data-read-all="true" aria-label="一键已读" title="一键已读" ${s.rows.some(r => r.unread) ? '' : 'disabled'}>${ICON.done}</button></div></div>
       <div class="chips" role="tablist">${tabs}</div>
       <div class="scroll"><div class="list">${items || '<div class="empty">还没有通知</div>'}</div>
@@ -712,16 +715,18 @@ table.cmpdoc td:first-child{font-weight:600}
       </div><div class="sec-label">逐频道 App 推送</div><div class="group">${Object.keys(CH).map(channelToggle).join('')}</div><div class="hint">自建频道与他建频道按相同规则处理。关闭推送不影响站内内容、邮件与已读状态。</div></div>`;
   }
 
-  function renderCompare(cur, nw) {
+  function renderCompare(cur, nw, shared) {
     const tr = (label, a, b, better) => `<tr><td>${label}</td><td class="v ${better === 'b' ? 'bad' : ''}">${a}</td><td class="v ${better === 'b' ? 'good' : ''}">${b}</td></tr>`;
-    document.getElementById('cmp').innerHTML = `<thead><tr><th></th><th>现状</th><th>改造后</th></tr></thead><tbody>
-      ${tr('推送了几次', cur.out.length, nw.out.length, nw.out.length < cur.out.length ? 'b' : '')}
-      ${tr('其中夜里 22:00–08:00', cur.night, nw.night, nw.night < cur.night ? 'b' : '')}
-      ${tr('告警推送到了', `${cur.alertsOut} / ${cur.alertsTotal}`, `${nw.alertsOut} / ${nw.alertsTotal}`, nw.alertsOut > cur.alertsOut ? 'b' : '')}
-      ${tr('入口角标（待确认）', cur.badge, nw.badge, nw.badge < cur.badge ? 'b' : '')}
-      ${tr('通知页条目', cur.listCount, nw.listCount, nw.listCount < cur.listCount ? 'b' : '')}
-      ${tr('未展示的有效互动', cur.droppedHuman, nw.droppedHuman, nw.droppedHuman < cur.droppedHuman ? 'b' : '')}
+    document.getElementById('cmp').innerHTML = `<thead><tr><th>仅比较两版共同类型</th><th>旧策略示例</th><th>改造后</th></tr></thead><tbody>
+      ${tr('推送了几次', cur.out.length, shared.out.length, shared.out.length < cur.out.length ? 'b' : '')}
+      ${tr('其中夜里 22:00–08:00', cur.night, shared.night, shared.night < cur.night ? 'b' : '')}
+      ${tr('告警推送到了', `${cur.alertsOut} / ${cur.alertsTotal}`, `${shared.alertsOut} / ${shared.alertsTotal}`, shared.alertsOut > cur.alertsOut ? 'b' : '')}
+      ${tr('通知页条目', cur.listCount, shared.listCount)}
+      ${tr('列表未读条目', cur.rows.filter(r=>r.unread).length, shared.rows.filter(r=>r.unread).length)}
+      ${tr('未展示的有效互动', cur.droppedHuman, shared.droppedHuman, shared.droppedHuman < cur.droppedHuman ? 'b' : '')}
     </tbody>`;
+    const added = nw.rows.filter(r=>addedKinds.has(r.kind));
+    document.getElementById('comparison-scope').textContent = `右侧完整场景含会员临期、对话完成、任务结算等补齐类型：当前新增 ${added.length} 条，其中 ${added.filter(r=>r.unread).length} 条未读。下方对比表排除这些类型后重新计算，避免把新增能力算作降噪效果。分类数字统计全部未读；Web 铃铛暂计重要未读，不用于效果对比。`;
     document.getElementById('cmp-time').textContent = hhmm(state.T);
   }
 
@@ -729,7 +734,7 @@ table.cmpdoc td:first-child{font-weight:600}
   const viewedTitles = new Set();
   const expandedContent = new Set();
   const noticeKey = r => r.ids.join(',');
-  const webPage = {tab: 'all', sub: null, open: true, scroll: 0};
+  const webPage = {tab: 'all', sub: null, open: true, scrolls: new Map()};
   state.cfg.emailOn = false;
   let latestRows = [];
 
@@ -741,41 +746,45 @@ table.cmpdoc td:first-child{font-weight:600}
     else html = screenList(s, mode, ps);
     const sc = document.getElementById(SCREEN_IDS[mode]);
     const prev = sc.querySelector('.scroll, .banners');
-    const top = prev ? prev.scrollTop : 0;
+    if (prev && sc.dataset.pageKey) ps.scrolls.set(sc.dataset.pageKey, prev.scrollTop);
+    const key = state.screen === 'list' ? 'list:' + ps.tab : state.screen + ':' + (ps.sub || 'main');
     sc.innerHTML = html;
+    sc.dataset.pageKey = key;
     const next = sc.querySelector('.scroll, .banners');
-    if (next) next.scrollTop = top;
+    if (next) next.scrollTop = ps.scrolls.get(key) || 0;
   }
 
   function renderKpis(mode, s) {
     const k = (n, label) => `<div class="kpi"><b>${n}</b><span>${label}</span></div>`;
-    document.getElementById('kpi-' + mode).innerHTML = k(s.out.length, '次推送') + k(s.night, '次在夜里') + k(`${s.alertsOut}/${s.alertsTotal}`, '告警送达') + k(s.badge, '入口角标（待确认）');
+    document.getElementById('kpi-' + mode).innerHTML = k(s.out.length, '次推送') + k(s.night, '次在夜里') + k(`${s.alertsOut}/${s.alertsTotal}`, '告警送达') + k(s.rows.filter(r=>r.unread).length, '列表未读');
   }
 
   function render() {
     const cur = sim('cur', state.cfg, state.T, state.reads);
     const nw = sim('new', state.cfg, state.T, state.reads);
+    const shared = sim('new', state.cfg, state.T, state.reads, E.filter(e=>!addedKinds.has(e.k)));
     nw.badge = nw.rows.filter(r => r.unread && r.counts).length;
     latestRows = nw.rows;
     paint('cur', cur); paint('new', nw);
     const web = document.getElementById('screen-web');
     const oldScroll = web.querySelector('.scroll');
-    if (oldScroll && !web.hidden && web.dataset.view === 'list') webPage.scroll = oldScroll.scrollTop;
+    if (oldScroll && !web.hidden && web.dataset.view === 'list') webPage.scrolls.set(web.dataset.tab, oldScroll.scrollTop);
     web.innerHTML = webPage.sub === 'submode' ? screenSubMode() : webPage.sub === 'settings' ? screenSettings('new', true) : screenList(nw, 'new', webPage);
     web.hidden = !webPage.open;
     web.dataset.view = webPage.sub || 'list';
+    web.dataset.tab = webPage.tab;
     if (!webPage.sub) {
       web.querySelector('.chips').append(web.querySelector('[data-read-all]'));
       const menu = web.querySelector('[aria-label="打开菜单"]');
       menu.remove();
       web.querySelector('.topbar').style.gridTemplateColumns = '1fr auto';
       web.querySelector('.right-icons').insertAdjacentHTML('beforeend','<button class="icon-btn" data-web-close="true" aria-label="关闭通知" title="关闭通知">×</button>');
-      web.querySelector('.scroll').scrollTop = webPage.scroll;
+      web.querySelector('.scroll').scrollTop = webPage.scrolls.get(webPage.tab) || 0;
     }
     document.getElementById('web-bell').innerHTML = '<img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIxLjciIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgY2xhc3M9Imx1Y2lkZSBsdWNpZGUtYmVsbCIgYXJpYS1oaWRkZW49InRydWUiPjxwYXRoIGQ9Ik0xMC4yNjggMjFhMiAyIDAgMCAwIDMuNDY0IDAiPjwvcGF0aD48cGF0aCBkPSJNMy4yNjIgMTUuMzI2QTEgMSAwIDAgMCA0IDE3aDE2YTEgMSAwIDAgMCAuNzQtMS42NzNDMTkuNDEgMTMuOTU2IDE4IDEyLjQ5OSAxOCA4QTYgNiAwIDAgMCA2IDhjMCA0LjQ5OS0xLjQxMSA1Ljk1Ni0yLjczOCA3LjMyNiI+PC9wYXRoPjwvc3ZnPg==" width="22" height="22" alt="">' + (nw.badge ? `<span>${nw.badge}</span>` : nw.rows.some(r=>r.unread) ? '<span class="mini-dot"></span>' : '');
     document.getElementById('web-bell').setAttribute('aria-expanded', String(webPage.open));
     renderKpis('cur', cur); renderKpis('new', nw);
-    renderCompare(cur, nw);
+    renderCompare(cur, nw, shared);
     document.querySelectorAll('[data-screen]').forEach(b => b.setAttribute('aria-pressed', b.dataset.screen === state.screen));
     document.getElementById('now').textContent = hhmm(state.T);
     document.getElementById('time').value = state.T;
@@ -790,6 +799,7 @@ table.cmpdoc td:first-child{font-weight:600}
   const echo = { who: null, until: 0 };
   function syncScroll(from) {
     const to = from === 'cur' ? 'new' : 'cur';
+    if (state.screen === 'settings' || document.getElementById(SCREEN_IDS[from]).dataset.pageKey !== document.getElementById(SCREEN_IDS[to]).dataset.pageKey) return;
     if (echo.who === from && performance.now() < echo.until) return;
     const a = document.querySelector(`#${SCREEN_IDS[from]} .scroll, #${SCREEN_IDS[from]} .banners`);
     const b = document.querySelector(`#${SCREEN_IDS[to]} .scroll, #${SCREEN_IDS[to]} .banners`);
@@ -846,7 +856,7 @@ table.cmpdoc td:first-child{font-weight:600}
       render();
     } else if (id === 'screen-web') {
       if (button.dataset.webClose) webPage.open = false;
-      else if (button.dataset.tab) { webPage.tab = button.dataset.tab; webPage.scroll = 0; document.querySelector('#screen-web .scroll').scrollTop = 0; }
+      else if (button.dataset.tab) webPage.tab = button.dataset.tab;
       else if (button.dataset.screenGo) webPage.sub = 'settings';
       else if (button.dataset.go === 'submode') webPage.sub = 'submode';
       else if (button.dataset.go === 'back') webPage.sub = webPage.sub === 'submode' ? 'settings' : null;
