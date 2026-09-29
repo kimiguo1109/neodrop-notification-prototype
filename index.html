@@ -4,6 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>NeoDrop 真实通知改造对比</title>
+<link rel="stylesheet" href="push-demo.css">
 <style>
 :root{font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif;color:#202020;background:#f5f6f7;font-synthesis:none;letter-spacing:0;color-scheme:light}
 *{box-sizing:border-box}body{margin:0}button,a{-webkit-tap-highlight-color:transparent}button{font:inherit;color:inherit;cursor:pointer}button:focus-visible,a:focus-visible{outline:3px solid #2468cc;outline-offset:3px}a{color:#285b96;text-underline-offset:4px}
@@ -20,7 +21,7 @@ main{max-width:1080px;margin:auto;padding:28px 28px 56px}header{display:flex;jus
 <style>@media(max-width:760px){.web-notices .row{grid-template-columns:37px minmax(0,1fr) 6px}.web-notices .avatar{width:37px;height:37px}.web-notices .photo{background-size:335.13px 728.61px;background-position-x:-13.16px}}.row.alert p:not(.source-line){display:none}</style>
 </head>
 <body><main>
-<header><div><h1>NeoDrop 通知改造原型</h1><p>2026 年 9 月 29 日 · 模拟器真实通知 · App 与 Web</p></div><a class="back" href="#web-prototype">查看 Web 通知浮层</a></header>
+<header><div><h1>NeoDrop 通知改造原型</h1><p>2026 年 9 月 29 日 · 模拟器真实通知 · App 与 Web</p></div><div class="tools-right"><a class="back" href="#push-demo">查看 Push 效果推演</a><a class="back" href="#web-prototype">Web 通知浮层</a></div></header>
 <div class="snapshot"><div><small>采集快照 · 左侧固定</small><strong>95 条未读</strong> <span>＝ 78 ＋ 15 ＋ 2</span></div><div id="current-counts" aria-live="polite"></div></div>
 <p class="count-rule">分类数字＝全部未读通知条目；小蓝点＝这条通知未读；标题变灰＝该篇内容已看。入口角标暂按重要未读、范围待评审，不等于分类总数。本页未核验全量重要未读，App 与 Web 铃铛数字均未演示，空白不代表 0。</p>
 <div class="tools"><div class="modes" aria-label="对比场景"><button data-mode="all" aria-pressed="true">通知首页</button><button data-mode="social" aria-pressed="false">互动样本</button><button data-mode="other" aria-pressed="false">运行提醒</button></div><div class="tools-right"><button class="icon" id="reset-demo" title="重置演示已读" aria-label="重置演示已读"></button><a href="simulator-before.png" target="_blank" rel="noopener">查看原始截图</a></div></div>
@@ -29,6 +30,7 @@ main{max-width:1080px;margin:auto;padding:28px 28px 56px}header{display:flex;jus
 <div class="column"><h2>改造后</h2><p>标题优先 · 运行提醒前置 · 四分类不变</p><div class="device"><div class="screen" id="after"></div></div></div>
 </section>
 <p class="note" id="sample-note"></p>
+<section id="push-demo" class="push-section"></section>
 <section id="web-prototype" class="web-section">
 <h2>Web 通知浮层</h2><p class="note">与上方 App 使用同一批真实通知及本地演示已读状态。沿用左侧导航入口与底部四分类；未采集全量通知，全部已读仅作用于样本。</p>
 <div class="web-frame"><aside class="web-sidebar"><strong class="brand">Neodrop</strong><div class="web-create">创建</div><nav>首页<br>发现<br>我的频道<br>自动发布<br>加入 Discord</nav><div class="web-account"><span>通知</span><button class="icon" data-web-toggle aria-label="打开或关闭通知" title="打开或关闭通知"></button></div></aside><div class="web-workspace"><div class="web-channel"><span class="avatar">硅</span><div><strong>硅谷101 访谈精华</strong><p>内容</p></div></div><div class="web-notices" id="web-notices"></div></div></div>
@@ -123,4 +125,4 @@ document.addEventListener('click',e=>{
  else if(b.hasAttribute('data-settings'))showSettings();
 });
 render();
-</script></body></html>
+</script><script src="push-plan.js"></script><script src="push-demo.js"></script></body></html>
