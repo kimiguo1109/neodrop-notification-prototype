@@ -943,18 +943,6 @@ dialog .close {
   border-bottom: 1px solid #ddd;
   padding: 14px 0;
 }
-.brand-badge {
-  font-size: 9px;
-  font-style: normal;
-  color: white;
-  background: #111;
-  width: 17px;
-  height: 17px;
-  border: 2px solid white;
-  display: grid;
-  place-items: center;
-  border-radius: 5px;
-}
 @media (max-width: 760px) {
   main {
     padding: 20px 16px 40px;
