@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>NeoDrop 通知改造原型</title><link rel="stylesheet" href="notification-app.css?v=20260929-compact"><link rel="stylesheet" href="push-demo.css"></head>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>NeoDrop 通知改造原型</title><link rel="stylesheet" href="notification-app.css?v=20260929-polish"><link rel="stylesheet" href="push-demo.css"></head>
 <body><main>
 <header><h1>NeoDrop 通知改造原型</h1><p>2026.09.29 修订 · App 与 Web · 本地交互演示，不修改真实账户</p></header>
 <nav class="demo-nav" aria-label="原型演示导航"><a href="#app-prototype">App 对比</a><a href="#web-prototype">Web 浮层</a><a href="#push-demo">Push 推演</a><button class="icon" id="reset-walkthrough" title="重置整场演示" aria-label="重置整场演示"></button></nav>
@@ -11,4 +11,4 @@
 <section id="push-demo" class="push-section"></section>
 <section class="reason"><h2>本轮修改</h2><dl><div><dt>频道分组，内容不丢</dt><dd>同频道通知在原列表内展开。频道名进入频道页，文章标题进入该篇；通知已读与内容已看分开。</dd></div><div><dt>主动开启就即时送达</dt><dd>App 推送成为独立通知渠道，与邮件分别启用和关联频道。不再设置每日摘要，也不限制主动开启频道的每日内容数量。</dd></div><div><dt>打扰按类型控制</dt><dd>点赞仍聚合、去重和限频；运行异常及时提醒。本期不增加夜间延后，系统勿扰仍由设备控制。</dd></div></dl></section>
 <p class="limits">真实采样为 13 条通知，保留早间账户快照 95＝78＋15＋2，不与补采时的实时未读混算。9月29日晚从模拟器补采硅谷频道2篇、Roast频道6篇真实标题，并补全截断标题；旧通知只保留累计篇数和最新标题，没有逐篇关联清单，历史分组按频道发布顺序重建，不作为原始批次核验结果。“多篇折叠示例”和“运行提醒示例”均为独立构造的数据，不计入真实快照。Push 时刻、预算、权限与未恢复状态均为演示设定，不代表线上投递日志。真实用户头像未采集，以首字占位；正式 Push 使用真实头像。原型表现是目标设计，原生系统通知需在真机验收。</p>
-</main><dialog id="detail"><button class="icon close" aria-label="关闭"></button><h2></h2><div class="dialog-body"></div><div class="dialog-actions"></div></dialog><script src="simulator-icons.js"></script><script src="notification-app.js?v=20260929-compact"></script><script src="push-plan.js"></script><script src="push-demo.js"></script></body></html>
+</main><dialog id="detail"><button class="icon close" aria-label="关闭"></button><h2></h2><div class="dialog-body"></div><div class="dialog-actions"></div></dialog><script src="simulator-icons.js"></script><script src="notification-app.js?v=20260929-polish"></script><script src="push-plan.js"></script><script src="push-demo.js"></script></body></html>

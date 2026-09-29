@@ -336,17 +336,21 @@ function groupRow(records) {
     open = expanded.has(key),
     unread = records.filter((r) => !read.has(r.id)).length;
   const all = records.flatMap((r) => articles(r).map((a) => ({ r, a }))),
-    total = records.reduce((n, r) => n + (r.batch || articles(r).length), 0);
+    total = records.reduce((n, r) => n + (r.batch || articles(r).length), 0),
+    singleNotice = records.length === 1;
   const visible = open ? all : all.slice(0, 2),
     shown = new Set();
   const entries = visible
     .map(({ r, a }) => {
       const firstInNotice = !shown.has(r.id);
       shown.add(r.id);
-      return `${firstInNotice ? `<div class="notice-meta" data-notice="${r.id}">${dot(!read.has(r.id))}<span>${r.batch ? `本条含 ${r.batch} 篇 · ` : ''}${esc(r.time)}</span></div>` : ''}<div class="article-item" data-article="${a.id}"><span></span><button class="content-title ${viewed.has(a.id) ? 'seen' : ''}" title="${esc(a.title)}" data-content="${r.id}:${a.id}">${esc(a.title)}</button></div>`;
+      return `${firstInNotice && !singleNotice ? `<div class="notice-meta" data-notice="${r.id}"><span class="notice-indicator">${dot(!read.has(r.id))}</span><span>${r.batch ? `本条含 ${r.batch} 篇 · ` : ''}${esc(r.time)}</span></div>` : ''}<div class="article-item" data-article="${a.id}"><button class="content-title ${viewed.has(a.id) ? 'seen' : ''}" title="${esc(a.title)}" data-content="${r.id}:${a.id}">${esc(a.title)}</button></div>`;
     })
     .join('');
-  return `<section class="channel-group" data-group="${key}"><div class="channel-head"><button class="channel-identity" data-channel-page="${key}">${avatar(first)}<span><strong>${esc(first.source)}</strong><span class="channel-status">${unread ? `${unread} 条未读通知` : '通知已读'} · ${total} 篇内容</span></span></button><button class="icon channel-read" data-read-channel="${key}" title="标记该频道通知已读" aria-label="标记该频道通知已读">${icon('CheckCheck')}</button>${all.length > 2 ? `<button class="icon channel-toggle" data-expand="${key}" aria-expanded="${open}" aria-label="${open ? '收起' : '展开'}频道内容" title="${open ? '收起' : '展开'}频道内容"><span style="display:flex;transform:rotate(${open ? -90 : 90}deg)">${icon('ChevronRight')}</span></button>` : ''}</div><div class="channel-items">${entries}</div>${all.length > 2 ? `<div class="group-actions"><button class="text-action" data-expand="${key}" aria-expanded="${open}">${open ? '收起较早内容' : `展开其余 ${all.length - 2} 篇`}</button></div>` : ''}</section>`;
+  const status = singleNotice
+    ? `<span class="notice-indicator">${dot(unread > 0)}</span>本条含 ${total} 篇<span aria-hidden="true">·</span>${esc(first.time)}`
+    : `${unread ? `${unread} 条未读通知` : '通知已读'} · ${total} 篇内容`;
+  return `<section class="channel-group" data-group="${key}"><div class="channel-head"><button class="channel-identity" data-channel-page="${key}">${avatar(first)}<span><strong>${esc(first.source)}</strong><span class="channel-status" ${singleNotice ? `data-notice="${first.id}"` : ''}>${status}</span></span></button><button class="icon channel-read" data-read-channel="${key}" title="标记该频道通知已读" aria-label="标记该频道通知已读">${icon('CheckCheck')}</button>${all.length > 2 ? `<button class="icon channel-toggle" data-expand="${key}" aria-expanded="${open}" aria-label="${open ? '收起' : '展开'}频道内容" title="${open ? '收起' : '展开'}频道内容"><span style="display:flex;transform:rotate(${open ? -90 : 90}deg)">${icon('ChevronRight')}</span></button>` : ''}</div><div class="channel-items">${entries}</div>${all.length > 2 ? `<div class="group-actions"><button class="text-action" data-expand="${key}" aria-expanded="${open}">${icon('ChevronRight')}${open ? '收起较早内容' : `展开其余 ${all.length - 2} 篇`}</button></div>` : ''}</section>`;
 }
 function rowsMarkup(cat) {
   const selected = activeData().filter((r) => cat === 'all' || r.cat === cat),
