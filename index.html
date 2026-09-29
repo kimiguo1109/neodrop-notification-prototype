@@ -629,8 +629,8 @@ table.cmpdoc td:first-child{font-weight:600}
     } else {
       const T = [['all','全部'],['content','新内容'],['social','互动'],['other','其他']];
       if (!T.some(x => x[0] === ps.tab)) ps.tab = 'all';
-      const u = c => s.rows.filter(r => r.unread && r.counts && (c === 'all' || r.cat === c)).length;
-      tabs = T.map(([k, l]) => `<button class="chip" role="tab" data-tab="${k}" aria-selected="${ps.tab === k}">${l}${u(k) ? `<span class="n">${u(k)}</span>` : s.rows.some(r=>r.unread && (k==='all'||r.cat===k)) ? '<span class="mini-dot" aria-label="有未读通知"></span>' : ''}</button>`).join('');
+      const u = c => s.rows.filter(r => r.unread && (c === 'all' || r.cat === c)).length;
+      tabs = T.map(([k, l]) => `<button class="chip" role="tab" data-tab="${k}" aria-selected="${ps.tab === k}">${l}${u(k) ? `<span class="n">${u(k)}</span>` : ''}</button>`).join('');
       const selected = s.rows.filter(r => ps.tab === 'all' || r.cat === ps.tab);
       const pinned = ps.tab === 'all' ? selected.filter(r => r.kind === 'alert' && r.unread).sort((a, b) => b.t - a.t) : [];
       const rest = selected.filter(r => !pinned.includes(r)).sort((a, b) => b.t - a.t);
@@ -718,7 +718,7 @@ table.cmpdoc td:first-child{font-weight:600}
       ${tr('推送了几次', cur.out.length, nw.out.length, nw.out.length < cur.out.length ? 'b' : '')}
       ${tr('其中夜里 22:00–08:00', cur.night, nw.night, nw.night < cur.night ? 'b' : '')}
       ${tr('告警推送到了', `${cur.alertsOut} / ${cur.alertsTotal}`, `${nw.alertsOut} / ${nw.alertsTotal}`, nw.alertsOut > cur.alertsOut ? 'b' : '')}
-      ${tr('角标未读', cur.badge, nw.badge, nw.badge < cur.badge ? 'b' : '')}
+      ${tr('入口角标（待确认）', cur.badge, nw.badge, nw.badge < cur.badge ? 'b' : '')}
       ${tr('通知页条目', cur.listCount, nw.listCount, nw.listCount < cur.listCount ? 'b' : '')}
       ${tr('未展示的有效互动', cur.droppedHuman, nw.droppedHuman, nw.droppedHuman < cur.droppedHuman ? 'b' : '')}
     </tbody>`;
@@ -749,7 +749,7 @@ table.cmpdoc td:first-child{font-weight:600}
 
   function renderKpis(mode, s) {
     const k = (n, label) => `<div class="kpi"><b>${n}</b><span>${label}</span></div>`;
-    document.getElementById('kpi-' + mode).innerHTML = k(s.out.length, '次推送') + k(s.night, '次在夜里') + k(`${s.alertsOut}/${s.alertsTotal}`, '告警送达') + k(s.badge, '角标未读');
+    document.getElementById('kpi-' + mode).innerHTML = k(s.out.length, '次推送') + k(s.night, '次在夜里') + k(`${s.alertsOut}/${s.alertsTotal}`, '告警送达') + k(s.badge, '入口角标（待确认）');
   }
 
   function render() {
