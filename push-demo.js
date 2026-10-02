@@ -68,17 +68,21 @@
     return `赞了你的 ${new Set(b.items.map((e) => e.title)).size} 篇内容，共 ${b.items.length} 个赞`;
   }
   function pushIcon(batch) {
-    if (batch.pool === 'alert') return '';
+    if (batch.pool === 'alert')
+      return platform === 'ios'
+        ? '<img class="push-app-logo" src="neodrop-logo.png" alt="NeoDrop">'
+        : '';
     const event = batch.items[batch.items.length - 1],
       r = DATA.find((x) => x.id === event.id);
-    return `<span class="push-avatar" role="img" aria-label="${esc(batch.pool === 'like' ? `${r.name}的头像占位` : `${r.source}频道图`)}">${avatar(r)}</span>`;
+    return `<span class="push-avatar" role="img" aria-label="${esc(batch.pool === 'like' ? `${r.name}的头像占位` : `${r.source}频道图`)}${platform === 'ios' ? '，右下角为 NeoDrop 标识' : ''}">${avatar(r)}${platform === 'ios' ? '<img class="push-brand-badge" src="neodrop-logo.png" alt="">' : ''}</span>`;
   }
   function pushCard(batch, index, side) {
     const key = `${side}:${index}`,
       open = expandedCards.has(key),
       stamp = time(batch.time).slice(3);
     const message = `<span class="push-message"><span class="push-meta"><strong>${esc(heading(batch))}</strong>${platform === 'ios' ? `<time>${stamp}</time>` : ''}</span><span class="push-text">${esc(title(batch))}</span></span>`;
-    const body = `<button class="push-card-open" data-push-card="${key}">${platform === 'ios' ? '<img class="push-app-logo" src="neodrop-logo.png" alt="NeoDrop">' : ''}${message}${pushIcon(batch)}</button>`;
+    const sourceIcon = pushIcon(batch);
+    const body = `<button class="push-card-open" data-push-card="${key}">${platform === 'ios' ? sourceIcon : ''}${message}${platform === 'android' ? sourceIcon : ''}</button>`;
     const header =
       platform === 'android'
         ? `<div class="push-app-header"><span class="push-small-logo"><img src="neodrop-logo.png" alt="NeoDrop"></span><span>NeoDrop</span><span aria-hidden="true">·</span><time>${stamp}</time><button class="push-expand" data-push-expand="${key}" aria-expanded="${open}" aria-label="${open ? '收起' : '展开'}通知内容" title="${open ? '收起' : '展开'}通知内容">${icon('ChevronRight')}</button></div>`
@@ -90,7 +94,7 @@
  <p class="push-muted" id="push-assumptions"></p><div class="push-clock"><label for="push-time">演示时间</label><input id="push-time" type="range" min="0" max="1440" step="1" value="1439"><output id="push-time-label"></output></div>
  <div class="push-jumps">${[890, 900, 960, 1020, 1439].map((t) => `<button data-push-time="${t}">${time(t)}</button>`).join('')}</div>
  <div class="push-stats" id="push-stats" aria-live="polite"></div><p class="push-audit" id="push-audit"></p>
- <div class="push-platform"><span>系统外观</span><div class="push-platform-switch" role="group" aria-label="推送预览平台"><button data-push-platform="ios" aria-pressed="true">iOS</button><button data-push-platform="android" aria-pressed="false">Android</button></div><span class="push-muted">普通通知</span></div><p class="push-muted" id="push-platform-note"></p>
+ <div class="push-platform"><span>系统外观</span><div class="push-platform-switch" role="group" aria-label="推送预览平台"><button data-push-platform="ios" aria-pressed="true">iOS</button><button data-push-platform="android" aria-pressed="false">Android</button></div><span class="push-muted" id="push-style-name"></span></div><p class="push-muted" id="push-platform-note"></p>
  <div class="push-phones"><div><h3>逐条即时 · 对照假设</h3><div class="push-lock"><div class="push-lock-head"></div><div class="push-lock-list" id="push-before"></div></div></div><div><h3>方案规则 · 推演结果</h3><div class="push-lock"><div class="push-lock-head"></div><div class="push-lock-list" id="push-after"></div></div></div></div>
  <details class="push-advanced"><summary>推演偏好与测试条件</summary><p>为展示策略，已开启全部样本频道和点赞。实际新频道沿用“新订阅频道默认关联”的账户选择；点赞默认关。这些测试开关独立于上方通知渠道设置。</p><div class="push-controls">${[
    ['push', 'App 推送'],
@@ -106,7 +110,7 @@
      '',
    )}</div><div class="push-channel">${channels.map((r) => `<label><input type="checkbox" data-push-channel="${r.id}" checked>${esc(r.source)}</label>`).join('')}</div><p>已关联频道的内容更新不设每天 2 次或 4 次的上限，也不占用点赞预算。点赞最多 1 次/小时、2 次/日，触顶只保留站内，不次日补发。运行异常按同一事件去重，不等待定时汇总。</p></details>
  <h3>逐条通知去了哪里</h3><p class="push-muted">读取或恢复发生在发送前，会撤销待发；发生在发送后，保留已发送历史。改变测试规则会重算整个场景，不代表撤回真实 Push。下表未读仅属于本场景，不是账户总数。</p><div class="push-ledger"><table><thead><tr><th>演示发生时间</th><th>真实通知</th><th>方案处理结果</th><th>操作</th></tr></thead><tbody id="push-ledger"></tbody></table></div>
- <p class="push-muted">本场景的频道更新、点赞和运行提醒均按普通通知展示，不套用通信头像加 App 小角标。频道图为内容来源，用户图为行为人；多人聚合文字仍保留“等 N 人”。用户头像未采集，首字圆形是占位。图片为可选项，未加载时保留系统 App 标识及文字。预览采用常见系统模板示意，最终位置、裁切与展开外观以系统版本和真机为准。<a href="https://developer.apple.com/design/human-interface-guidelines/notifications" target="_blank" rel="noopener">Apple 通知规范</a> · <a href="https://developer.android.com/design/ui/mobile/guides/home-screen/notifications" target="_blank" rel="noopener">Android 通知规范</a></p>`;
+ <p class="push-muted">iOS 展示来源头像叠 App 小标的目标视觉，原生接入条件与真机效果仍需验收。频道图为内容来源，用户图为行为人；多人聚合文字保留“等 N 人”。用户头像未采集，首字圆形是占位。运行提醒仅使用 NeoDrop 图标。Android 单独按其系统模板示意，不照搬 iOS；最终位置、裁切与展开外观以系统版本和真机为准。<a href="https://developer.apple.com/design/human-interface-guidelines/notifications" target="_blank" rel="noopener">Apple 通知规范</a> · <a href="https://developer.android.com/design/ui/mobile/guides/home-screen/notifications" target="_blank" rel="noopener">Android 通知规范</a></p>`;
   function draw() {
     root.dataset.platform = platform;
     root
@@ -117,9 +121,11 @@
           String(el.dataset.pushPlatform === platform),
         ),
       );
+    root.querySelector('#push-style-name').textContent =
+      platform === 'ios' ? '来源头像方案' : '普通通知';
     root.querySelector('#push-platform-note').textContent =
       platform === 'ios'
-        ? '左侧为系统 App 图标；右侧展示可选的频道图或用户图片附件，不替换 App 图标。运行提醒仅保留 App 标识和文字。'
+        ? '左侧为频道图或用户头像，右下角叠 NeoDrop 小标；右侧仅显示时间。运行提醒使用 App 图标。'
         : '上方为系统 App 小图标、名称和时间；右侧为频道或用户大图标。箭头展开正文，品牌不叠在头像角上；厂商模板可能不同。';
     const input = events(),
       next = NotificationPushPlan.plan(input, cfg, now),
