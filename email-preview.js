@@ -1,54 +1,21 @@
 /* 纯本地交互原型，不调用真实账户、验证或发信接口。 */
-const CHANNELS = [
-  { id: 'silicon', name: '硅谷101 访谈精华', y: 412, fill: '#ff6600' },
-  { id: 'hn', name: 'Hacker News 每日 Top 20', y: 681, fill: '#ff6600' },
-  {
-    id: 'podcast',
-    name: '我的播客精华 | 12 档节目速读',
-    y: 992,
-    fill: '#f3ebd3',
-  },
-  { id: 'roast', name: 'Daily AI Product Roast', y: 1302, fill: '#101010' },
-  { id: 'funding', name: 'AI应用融资快讯', y: 1614, fill: '#001031' },
-];
-const BATCHES = [
-  {
-    id: 'single',
-    channel: 'funding',
-    time: '09:42',
-    title: '单篇更新',
-    articles: [
-      {
-        id: 'hiring',
-        title: 'HiringCafe 融 680 万美元，去拆 Indeed',
-        excerpt:
-          '招聘搜索正在重新划分入口。HiringCafe 希望让求职者直接找到企业发布的岗位，把信息检索与职位匹配放在同一个体验里。',
-      },
-    ],
-  },
-  {
-    id: 'multi',
-    channel: 'silicon',
-    time: '09:18',
-    title: '同批多篇',
-    articles: [
-      {
-        id: 'e253',
-        title:
-          'E253｜谁在给大模型出题、卖题、判卷：数据公司卖什么、榜单能不能信、专家数据怎么验：完整逐字稿和精华摘要',
-        excerpt:
-          '模型能力怎样被衡量？从数据生产到基准评测，本期把出题、标注与验证背后的工作拆开来看，也讨论排行榜之外更难量化的能力。',
-      },
-      {
-        id: 'e252',
-        title:
-          'E252｜硅谷睡眠外挂：对话 Eight Sleep 创始人，两万元的床套是富人的玩具还是预防医疗的入口：完整逐字稿和精华摘要',
-        excerpt:
-          '一张床如何成为健康设备？从睡眠监测、温度调节到长期健康数据，对话 Eight Sleep 创始人，讨论产品背后的技术与商业选择。',
-      },
-    ],
-  },
-];
+const CHANNELS = window.EMAIL_DATA.channels;
+const BATCHES = window.EMAIL_DATA.batches;
+const ARTICLES = BATCHES.flatMap((item) => item.articles);
+const RECORD_IDS = [...new Set(ARTICLES.map((article) => article.recordId))];
+const dateFormat = new Intl.DateTimeFormat('zh-CN', {
+  month: 'long',
+  day: 'numeric',
+  timeZone: 'Asia/Shanghai',
+});
+const dateTimeFormat = new Intl.DateTimeFormat('zh-CN', {
+  month: 'long',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+  timeZone: 'Asia/Shanghai',
+});
 const VIEW_LABELS = {
   web: ['Monitor', 'Web 渠道'],
   app: ['Smartphone', 'App 渠道'],
@@ -75,7 +42,7 @@ function initialState() {
         name: '工作邮箱',
         address: 'work@example.com',
         enabled: true,
-        linked: ['silicon', 'hn', 'funding'],
+        linked: ['silicon', 'hn', 'funding', 'podcast'],
         autoLink: false,
         verified: 'verified',
         health: 'delivered',
@@ -111,7 +78,7 @@ function initialState() {
         revision: 1,
         name: '工作邮箱',
         address: 'work@example.com',
-        batches: ['single', 'multi'],
+        batches: BATCHES.map((item) => item.id),
       },
       {
         key: 'personal:1',
@@ -119,7 +86,7 @@ function initialState() {
         revision: 1,
         name: '个人邮箱',
         address: 'reader@example.com',
-        batches: ['multi'],
+        batches: ['single', 'podcast'],
       },
     ],
   };
@@ -160,7 +127,9 @@ function copy() {
 }
 function avatar(id) {
   const c = channel(id);
-  return `<span class="channel-avatar" style="background-position-y:-${(c.y * 32) / 104}px;--fill:${c.fill}" aria-hidden="true"></span>`;
+  return c.avatar
+    ? `<img class="channel-avatar" src="${escapeHtml(c.avatar)}" alt="">`
+    : `<span class="channel-avatar">${escapeHtml(c.name.slice(0, 1))}</span>`;
 }
 function action(name, label, id = '', className = 'text-button', glyph = '') {
   return `<button class="${className}" data-action="${name}" data-id="${escapeHtml(id)}">${glyph ? icon(glyph) : ''}${label}</button>`;
@@ -179,16 +148,9 @@ function toast(message) {
   toastTimer = setTimeout(() => el.classList.remove('visible'), 3200);
 }
 function unread(category = 'all') {
-  const records = [
-    ['single', 'content'],
-    ['multi', 'content'],
-    ['reply', 'social'],
-    ['alert', 'other'],
-  ];
-  return records.filter(
-    ([id, cat]) =>
-      !state.read.has(id) && (category === 'all' || category === cat),
-  ).length;
+  return category === 'all' || category === 'content'
+    ? RECORD_IDS.filter((id) => !state.read.has(id)).length
+    : 0;
 }
 function statusOf(item) {
   if (item.verified === 'pending') return badge('待验证', 'warn');
@@ -242,6 +204,27 @@ function renderApp() {
 function subject(b) {
   return `${b.articles[0].title}${b.articles.length > 1 ? ` + 其余 ${b.articles.length - 1} 篇` : ''} | ${channel(b.channel).name}`;
 }
+function formatDate(value, includeTime = false) {
+  return (includeTime ? dateTimeFormat : dateFormat).format(new Date(value));
+}
+function contentType(article) {
+  return article.carrier === 'ImagePost'
+    ? `图文 · ${article.gallery.length} 张图片`
+    : '文章';
+}
+function renderOutline(article) {
+  return article.outline.length
+    ? `<div class="story-outline"><h3>本篇包括</h3><ul>${article.outline.map((heading) => `<li>${escapeHtml(heading)}</li>`).join('')}</ul></div>`
+    : '';
+}
+function renderStory(article, b, index) {
+  const imagePost = article.carrier === 'ImagePost';
+  return `<section class="email-story ${imagePost ? 'image-story' : 'article-story'}">
+    ${article.cover ? `<button class="story-cover" data-action="article" data-id="${b.id}:${article.id}" aria-label="打开${escapeHtml(article.title)}"><img src="${escapeHtml(article.cover)}" alt="${escapeHtml(article.title)}的封面" decoding="async">${imagePost ? `<span>${article.gallery.length} 张图片 ${icon('ChevronRight')}</span>` : ''}</button>` : ''}
+    <div class="story-body"><div class="story-meta">${b.articles.length > 1 ? `<span>${String(index + 1).padStart(2, '0')}</span>` : ''}<span>${contentType(article)}</span><time>${formatDate(article.publishedAt, true)}</time></div>
+    <h2><button data-action="article" data-id="${b.id}:${article.id}">${escapeHtml(article.title)}</button></h2><p>${escapeHtml(article.excerpt)}</p>
+    ${renderOutline(article)}<div class="story-actions">${action('article', imagePost ? '查看完整图文' : '阅读全文', `${b.id}:${article.id}`, 'button primary', 'ArrowUpRight')}${state.seen.has(article.id) ? `<span class="story-seen">${icon('Check')}已看</span>` : ''}</div></div></section>`;
+}
 function renderEmail() {
   const currentCopy = copy();
   if (!currentCopy.batches.includes(mailId)) mailId = currentCopy.batches[0];
@@ -255,17 +238,17 @@ function renderEmail() {
     currentEndpoint.revision === currentCopy.revision &&
     (!currentEndpoint.enabled || !currentEndpoint.linked.includes(c.id));
   return `<div class="mail-shell"><div class="mail-toolbar"><strong>${icon('Inbox')}收件箱</strong><label><span>收件邮箱</span><select id="mail-recipient">${state.copies.map((item) => `<option value="${item.key}" ${inbox === item.key ? 'selected' : ''}>${escapeHtml(item.address)}</option>`).join('')}</select></label></div>
-    <div class="mail-layout"><aside class="inbox-list"><div class="inbox-heading"><span>今天</span><span>${currentCopy.batches.length} 封</span></div>${currentCopy.batches
+    <div class="mail-layout"><aside class="inbox-list"><div class="inbox-heading"><span>邮件样例</span><span>${currentCopy.batches.length} 封</span></div>${currentCopy.batches
       .map((id) => {
         const message = batch(id);
-        return `<button class="inbox-message" data-action="mail" data-id="${id}" aria-current="${id === mailId}"><div class="inbox-from">Neodrop<time>${message.time}</time></div><h3>${message.title} · ${channel(message.channel).name}</h3><p>${escapeHtml(message.articles[0].title)}</p></button>`;
+        return `<button class="inbox-message" data-action="mail" data-id="${id}" aria-current="${id === mailId}"><div class="inbox-from">${avatar(message.channel)}<span>${message.title}</span><time>${formatDate(message.publishedAt)}</time></div><h3>${escapeHtml(channel(message.channel).name)}</h3><p>${escapeHtml(message.articles[0].title)}</p></button>`;
       })
       .join('')}</aside>
-    <section class="email-detail"><div class="mail-envelope"><h1>${escapeHtml(subject(b))}</h1><div class="from-row"><img class="app-logo" src="neodrop-logo.png" alt="Neodrop"><div><strong>Neodrop</strong> <span class="muted">&lt;updates@neodrop.ai&gt;</span><small>发给 ${escapeHtml(currentCopy.address)} · 今天 ${b.time}</small></div></div></div>
-    <div class="mail-paper-wrap"><article class="mail-paper"><div class="email-brand"><img src="neodrop-logo.png" alt="">Neodrop</div><div class="email-kicker">频道更新 · ${b.articles.length} 篇新内容</div><button class="channel-link" data-action="channel" data-id="${c.id}">${avatar(c.id)}${c.name}${icon('ChevronRight')}</button>
-    ${b.articles.map((article, index) => `<section class="email-story">${b.articles.length > 1 ? `<div class="story-index">${String(index + 1).padStart(2, '0')}</div>` : ''}<h2>${escapeHtml(article.title)}</h2><p>${article.excerpt}</p>${action('article', '阅读内容', `${b.id}:${article.id}`, 'button primary', 'ArrowUpRight')}</section>`).join('')}
+    <section class="email-detail"><div class="mail-envelope"><h1>${escapeHtml(subject(b))}</h1><div class="from-row"><img class="app-logo" src="neodrop-logo.png" alt="Neodrop"><div><strong>Neodrop</strong> <span class="muted">&lt;updates@neodrop.ai&gt;</span><small>发给 ${escapeHtml(currentCopy.address)} · 邮件投递演示</small></div></div></div>
+    <div class="mail-paper-wrap"><article class="mail-paper"><div class="email-brand"><img src="neodrop-logo.png" alt="">Neodrop<time>${formatDate(b.publishedAt)}</time></div><div class="email-channel-row"><button class="channel-link" data-action="channel" data-id="${c.id}">${avatar(c.id)}<span>${escapeHtml(c.name)}</span>${icon('ChevronRight')}</button><span class="email-edition">${b.articles.length} 篇更新</span></div>
+    ${b.articles.map((article, index) => renderStory(article, b, index)).join('')}
     <footer class="email-footer"><p>此邮件发送至 ${escapeHtml(currentCopy.address)}，因为你选择了接收「${c.name}」的更新。</p><div class="email-footer-actions">${action('manage-mail', '管理此邮箱', currentCopy.key, '')}${action('unsubscribe', '停止此频道邮件', `${currentCopy.key}:${c.id}`, '')}</div>${disabled ? '<p class="delivery-note">后续内容邮件已关闭，此封已收到的邮件仍然保留。</p>' : ''}</footer></article></div>
-    <div class="mail-read-strip"><span>演示账户 · 站内未读 ${unread()} · 内容已看 ${state.seen.size} / 3</span>${action('notices', '查看两端通知', '', 'text-button', 'ArrowUpRight')}</div></section></div></div>`;
+    <div class="mail-read-strip"><span>样本通知未读 ${unread()} · 内容已看 ${state.seen.size} / ${ARTICLES.length}</span>${action('notices', '查看两端通知', '', 'text-button', 'ArrowUpRight')}</div></section></div></div>`;
 }
 function renderNoticePanel(platform) {
   const active = state.filter[platform];
@@ -276,10 +259,17 @@ function renderNoticePanel(platform) {
     ['other', '其他'],
   ];
   const show = (category) => active === 'all' || active === category;
-  return `<section><h2>${icon(platform === 'app' ? 'Smartphone' : 'Monitor')}${platform === 'app' ? 'App' : 'Web'}</h2><div class="notice-panel" data-platform="${platform}"><div class="notice-head"><strong>通知</strong><div>${iconAction(platform, '通知渠道', '', 'Settings')}${iconAction('mark-all', '全部标为已读', '', 'CheckCheck')}</div></div><div class="notice-tabs">${tabs.map(([id, label]) => `<button data-action="filter" data-id="${platform}:${id}" aria-pressed="${active === id}">${label}<b>${unread(id)}</b></button>`).join('')}</div><div class="notice-day">今天</div>
-    ${show('content') ? BATCHES.map((b) => `<article class="notice-record" data-record="${b.id}"><div class="notice-record-head">${avatar(b.channel)}<div><button class="channel-link" data-action="channel" data-id="${b.channel}"><strong>${channel(b.channel).name}</strong></button><small>${state.read.has(b.id) ? '通知已读' : '1 条未读通知'} · ${b.articles.length} 篇内容</small></div>${state.read.has(b.id) ? '' : '<span class="unread-dot" aria-label="未读"></span>'}</div>${b.articles.map((article) => `<div class="notice-story ${state.seen.has(article.id) ? 'seen' : ''}"><button data-action="article" data-id="${b.id}:${article.id}">${escapeHtml(article.title)}</button>${state.seen.has(article.id) ? badge('已看') : ''}</div>`).join('')}</article>`).join('') : ''}
-    ${show('social') ? `<article class="notice-record" data-record="reply"><div class="notice-record-head"><span class="account-avatar">林</span><div><strong>林夏 回复了你的评论</strong><small>《上海梧桐区一日》</small></div>${state.read.has('reply') ? '' : '<span class="unread-dot" aria-label="未读"></span>'}</div><p>那家店周一休息，别白跑。</p>${action('notice-detail', '查看回复', 'reply')}</article>` : ''}
-    ${show('other') ? `<article class="notice-record" data-record="alert"><div class="notice-record-head"><span class="endpoint-icon">${icon('TriangleAlert')}</span><div><strong>连续几期存在数据缺口</strong><small>硅谷101 访谈精华 · 运行提醒</small></div>${state.read.has('alert') ? '' : '<span class="unread-dot" aria-label="未读"></span>'}</div>${action('notice-detail', '查看运行', 'alert')}</article>` : ''}</div></section>`;
+  return `<section><h2>${icon(platform === 'app' ? 'Smartphone' : 'Monitor')}${platform === 'app' ? 'App' : 'Web'}</h2><div class="notice-panel" data-platform="${platform}"><div class="notice-head"><strong>通知</strong><div>${iconAction(platform, '通知渠道', '', 'Settings')}${iconAction('mark-all', '全部标为已读', '', 'CheckCheck')}</div></div><div class="notice-tabs">${tabs.map(([id, label]) => `<button data-action="filter" data-id="${platform}:${id}" aria-pressed="${active === id}">${label}<b>${unread(id)}</b></button>`).join('')}</div>
+    ${
+      show('content')
+        ? BATCHES.map((b) => {
+            const pending = [
+              ...new Set(b.articles.map((a) => a.recordId)),
+            ].filter((id) => !state.read.has(id)).length;
+            return `<article class="notice-record" data-record="${b.id}"><div class="notice-record-head">${avatar(b.channel)}<div><button class="channel-link" data-action="channel" data-id="${b.channel}"><strong>${channel(b.channel).name}</strong></button><small>${pending ? `${pending} 条未读通知` : '通知已读'} · ${b.articles.length} 篇内容</small></div>${pending ? '<span class="unread-dot" aria-label="未读"></span>' : ''}</div>${b.articles.map((article) => `<div class="notice-story ${state.seen.has(article.id) ? 'seen' : ''}"><button data-action="article" data-id="${b.id}:${article.id}">${escapeHtml(article.title)}</button>${state.seen.has(article.id) ? badge('已看') : ''}</div>`).join('')}</article>`;
+          }).join('')
+        : `<div class="empty-block">${icon('Bell')}<p>暂无${active === 'social' ? '互动' : '其他'}通知</p></div>`
+    }</div></section>`;
 }
 function render() {
   document.querySelector('#preview-tabs').innerHTML = Object.entries(
@@ -297,7 +287,7 @@ function render() {
         ? renderApp()
         : view === 'email'
           ? renderEmail()
-          : `<div class="notification-stage">${renderNoticePanel('app')}${renderNoticePanel('web')}</div>`;
+          : `<p class="sample-count-note">本页选取 ${ARTICLES.length} 篇真实内容，来源为 ${RECORD_IDS.length} 条通知，演示 ${BATCHES.length} 封邮件。下方仅统计本页样本，不是账户总未读。</p><div class="notification-stage">${renderNoticePanel('app')}${renderNoticePanel('web')}</div>`;
 }
 function setView(next) {
   view = next;
@@ -360,12 +350,12 @@ function openArticle(value) {
   const b = batch(batchId),
     article = b.articles.find((item) => item.id === articleId);
   if (!article) throw new Error('内容不属于该批次');
-  state.read.add(batchId);
+  state.read.add(article.recordId);
   state.seen.add(articleId);
   render();
   showModal(
     '内容',
-    `<article class="article-landing"><button class="channel-link" data-action="channel" data-id="${b.channel}">${avatar(b.channel)}${channel(b.channel).name}</button><h3>${escapeHtml(article.title)}</h3><p>${article.excerpt}</p><div class="demo-verification"><span>内容落点示意 · 摘要为演示文案</span>${badge('本篇已看', 'good')}</div></article>`,
+    `<article class="article-landing"><button class="channel-link" data-action="channel" data-id="${b.channel}">${avatar(b.channel)}${channel(b.channel).name}</button><div class="story-meta"><span>${contentType(article)}</span><time>${formatDate(article.publishedAt, true)}</time></div><h3>${escapeHtml(article.title)}</h3><p>${escapeHtml(article.excerpt)}</p>${article.gallery.length ? `<div class="article-gallery">${article.gallery.map((url, index) => `<figure><img src="${escapeHtml(url)}" alt="${escapeHtml(article.title)}，第 ${index + 1} 张图片" decoding="async"><figcaption>${index + 1} / ${article.gallery.length}</figcaption></figure>`).join('')}</div>` : `${article.cover ? `<img class="landing-cover" src="${escapeHtml(article.cover)}" alt="内容封面">` : ''}${renderOutline(article)}<h4>正文节选</h4>${article.lead.map((text) => `<p>${escapeHtml(text)}</p>`).join('')}`}<a class="source-link" href="${escapeHtml(article.url)}" target="_blank" rel="noopener noreferrer">在 Neodrop 打开原内容 ${icon('ArrowUpRight')}</a><div class="demo-verification"><span>${article.excerptSource} · 仅更新本地演示状态</span>${badge('本篇已看', 'good')}</div></article>`,
     `${action('close', '返回', '', 'button')}${action('go-notices', '查看通知状态', '', 'button primary')}`,
   );
 }
@@ -374,7 +364,7 @@ function openChannel(id) {
     contents = BATCHES.filter((b) => b.channel === id);
   showModal(
     c.name,
-    `<div class="tagline">${avatar(id)}${badge('已订阅', 'good')}</div><div class="modal-link-list">${contents.flatMap((b) => b.articles.map((article) => action('article', escapeHtml(article.title), `${b.id}:${article.id}`, ''))).join('')}</div>`,
+    `<div class="tagline">${avatar(id)}${badge('已订阅', 'good')}</div><div class="modal-link-list">${contents.flatMap((b) => b.articles.map((article) => action('article', escapeHtml(article.title), `${b.id}:${article.id}`, ''))).join('')}</div><a class="source-link" href="${escapeHtml(c.url)}" target="_blank" rel="noopener noreferrer">在 Neodrop 查看频道 ${icon('ArrowUpRight')}</a>`,
   );
 }
 function openUnsubscribe(value) {
@@ -519,19 +509,9 @@ document.addEventListener('click', (event) => {
     return;
   }
   if (name === 'mark-all') {
-    for (const recordId of ['single', 'multi', 'reply', 'alert'])
-      state.read.add(recordId);
+    for (const recordId of RECORD_IDS) state.read.add(recordId);
     render();
     toast('通知已全部标读，内容已看状态保持不变');
-    return;
-  }
-  if (name === 'notice-detail') {
-    state.read.add(id);
-    render();
-    showModal(
-      id === 'reply' ? '评论回复' : '运行详情',
-      `<p class="modal-copy">${id === 'reply' ? '林夏：那家店周一休息，别白跑。' : '硅谷101 访谈精华：连续几期存在数据缺口，运行提醒尚未处理。'}</p>`,
-    );
     return;
   }
   if (name === 'manage-mail') {

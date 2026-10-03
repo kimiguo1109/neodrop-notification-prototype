@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <title>Neodrop · 通知渠道与邮件预览</title>
-  <link rel="stylesheet" href="email-preview.css?v=20261003">
+  <link rel="stylesheet" href="email-preview.css?v=20261004">
 </head>
 <body>
   <header class="preview-bar">
@@ -13,12 +13,13 @@
     <nav id="preview-tabs" aria-label="预览视图"></nav>
     <div class="preview-tools"><label class="scenario"><span>场景</span><select id="scenario" aria-label="演示场景"><option value="normal">已配置账户</option><option value="pending">邮箱待验证</option><option value="failure">邮件投递异常</option><option value="permission">本机通知未授权</option><option value="legacy">旧邮箱待迁移</option></select></label><button class="icon-button" id="reset" title="重置演示" aria-label="重置演示"></button></div>
   </header>
-  <div class="preview-context"><span><i></i>交互原型 · 不发送真实邮件</span><span>邮件契约 2026.10.03</span></div>
+  <div class="preview-context"><span><i></i>真实内容快照 · 邮件交互演示</span><span>2026.10.04 采集 · 不发送真实邮件</span></div>
   <main id="preview-root"></main>
-  <footer class="preview-footer"><span>示例邮箱与演示批次；频道名称和标题沿用已有原型。App / Web 在本页共享状态，不连接真实账户。</span><details><summary>范围与待确认</summary><p>本页演示目标界面及本地操作，不验证实际鉴权、跨设备服务端同步或原生 Push。旧邮箱验证迁移、旧默认关联及首篇召回迁移仍需确认；示例开关不是新账户默认值。邮件接收不清站内未读，进入具体内容才更新该通知与该篇已看。</p></details></footer>
+  <footer class="preview-footer"><span>内容来自模拟器同账户后端通知，并经匿名接口核验为公开内容；封面、标题、摘要或正文摘录均为真实快照。邮箱、投递与已读为本地演示，不修改真实账户。</span><details><summary>数据与范围</summary><p>2026 年 10 月 4 日读取后端的 9 篇公开内容，选取其中 5 篇组成 4 封邮件样例。融资频道的 2 篇内容经相同生产记录及频道列表核对；后台原有 2 条通知仍分别计数，不因合为 1 封邮件而清零或合并。样本未读不等于账户未读总数，也不代表实际发信记录。原文内容按源数据呈现，本页未作事实核查。</p><p>App / Web 仅在本页共享状态，邮箱仍用示例地址；没有采集真实收件地址、发信历史或修改订阅。旧邮箱验证及默认关联迁移、首篇召回迁移仍需确认。打开邮件不清站内未读，点击具体内容只改变其所属通知和本篇已看。</p></details></footer>
   <dialog id="modal" aria-labelledby="modal-title"><div id="modal-content"></div></dialog>
   <div id="toast" role="status" aria-live="polite"></div>
   <script src="email-icons.js?v=20261003"></script>
-  <script src="email-preview.js?v=20261003"></script>
+  <script src="email-data.js?v=20261004"></script>
+  <script src="email-preview.js?v=20261004"></script>
 </body>
 </html>
