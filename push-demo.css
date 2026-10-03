@@ -9,6 +9,7 @@
   z-index: 5;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 24px;
   min-height: 52px;
   background: #f5f6f7;

@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>NeoDrop 通知改造原型</title><link rel="stylesheet" href="notification-app.css?v=20260929-native"><link rel="stylesheet" href="push-demo.css?v=20261002-source-avatar"></head>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>NeoDrop 通知改造原型</title><link rel="stylesheet" href="notification-app.css?v=20260929-native"><link rel="stylesheet" href="push-demo.css?v=20261003-email"></head>
 <body><main>
-<header><h1>NeoDrop 通知改造原型</h1><p>2026.10.02 修订 · App 与 Web · 本地交互演示，不修改真实账户</p></header>
-<nav class="demo-nav" aria-label="原型演示导航"><a href="#app-prototype">App 对比</a><a href="#web-prototype">Web 浮层</a><a href="#push-demo">Push 推演</a><button class="icon" id="reset-walkthrough" title="重置整场演示" aria-label="重置整场演示"></button></nav>
+<header><h1>NeoDrop 通知改造原型</h1><p>2026.10.03 修订 · App 与 Web · 本地交互演示，不修改真实账户</p></header>
+<nav class="demo-nav" aria-label="原型演示导航"><a href="#app-prototype">App 对比</a><a href="#web-prototype">Web 浮层</a><a href="#push-demo">Push 推演</a><a href="email-preview.html?v=20261003">邮件与渠道</a><button class="icon" id="reset-walkthrough" title="重置整场演示" aria-label="重置整场演示"></button></nav>
 <section id="app-prototype"><div class="snapshot"><div id="baseline-counts"></div><div id="current-counts" aria-live="polite"></div></div>
 <p class="count-rule">按未读通知记录计数，不按频道分组数或文章篇数计数。折叠不清未读；打开一篇只读其所属通知，并只将这一篇标为已看。入口重要未读范围仍待确认，铃铛数字未演示。</p>
 <div class="tools"><div class="modes" aria-label="数据场景"><button data-mode="real" aria-pressed="true">真实通知</button><button data-mode="grouped" aria-pressed="false">多篇折叠示例</button><button data-mode="alerts" aria-pressed="false">运行提醒示例</button></div><div class="tools-right"><button class="icon" id="reset-demo" title="重置当前列表" aria-label="重置当前列表"></button><a href="simulator-before.png" target="_blank" rel="noopener">原始截图</a></div></div>
