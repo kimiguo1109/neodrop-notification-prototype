@@ -2,7 +2,6 @@
 const CHANNELS = window.EMAIL_DATA.channels;
 const BATCHES = window.EMAIL_DATA.batches;
 const ARTICLES = BATCHES.flatMap((item) => item.articles);
-const RECORD_IDS = [...new Set(ARTICLES.map((article) => article.recordId))];
 const dateFormat = new Intl.DateTimeFormat('zh-CN', {
   month: 'long',
   day: 'numeric',
@@ -68,6 +67,7 @@ function initialState() {
       autoLink: false,
     },
     permission: true,
+    recordModel: 'target',
     read: new Set(),
     seen: new Set(),
     filter: { app: 'all', web: 'all' },
@@ -149,8 +149,16 @@ function toast(message) {
 }
 function unread(category = 'all') {
   return category === 'all' || category === 'content'
-    ? RECORD_IDS.filter((id) => !state.read.has(id)).length
+    ? recordIds().filter((id) => !state.read.has(id)).length
     : 0;
+}
+function notificationId(article) {
+  return state.recordModel === 'target'
+    ? article.targetRecordId
+    : article.recordId;
+}
+function recordIds() {
+  return [...new Set(ARTICLES.map(notificationId))];
 }
 function statusOf(item) {
   if (item.verified === 'pending') return badge('待验证', 'warn');
@@ -248,7 +256,7 @@ function renderEmail() {
     <div class="mail-paper-wrap"><article class="mail-paper"><div class="email-brand"><img src="neodrop-logo.png" alt="">Neodrop<time>${formatDate(b.publishedAt)}</time></div><div class="email-channel-row"><button class="channel-link" data-action="channel" data-id="${c.id}">${avatar(c.id)}<span>${escapeHtml(c.name)}</span>${icon('ChevronRight')}</button><span class="email-edition">${b.articles.length} 篇更新</span></div>
     ${b.articles.map((article, index) => renderStory(article, b, index)).join('')}
     <footer class="email-footer"><p>此邮件发送至 ${escapeHtml(currentCopy.address)}，因为你选择了接收「${c.name}」的更新。</p><div class="email-footer-actions">${action('manage-mail', '管理此邮箱', currentCopy.key, '')}${action('unsubscribe', '停止此频道邮件', `${currentCopy.key}:${c.id}`, '')}</div>${disabled ? '<p class="delivery-note">后续内容邮件已关闭，此封已收到的邮件仍然保留。</p>' : ''}</footer></article></div>
-    <div class="mail-read-strip"><span>样本通知未读 ${unread()} · 内容已看 ${state.seen.size} / ${ARTICLES.length}</span>${action('notices', '查看两端通知', '', 'text-button', 'ArrowUpRight')}</div></section></div></div>`;
+    <div class="mail-read-strip"><span>${state.recordModel === 'target' ? '改造后' : '历史快照'}通知未读 ${unread()} · 内容已看 ${state.seen.size} / ${ARTICLES.length}</span>${action('notices', '查看两端通知', '', 'text-button', 'ArrowUpRight')}</div></section></div></div>`;
 }
 function renderNoticePanel(platform) {
   const active = state.filter[platform];
@@ -259,19 +267,20 @@ function renderNoticePanel(platform) {
     ['other', '其他'],
   ];
   const show = (category) => active === 'all' || active === category;
-  return `<section><h2>${icon(platform === 'app' ? 'Smartphone' : 'Monitor')}${platform === 'app' ? 'App' : 'Web'}</h2><div class="notice-panel" data-platform="${platform}"><div class="notice-head"><strong>通知</strong><div>${iconAction(platform, '通知渠道', '', 'Settings')}${iconAction('mark-all', '全部标为已读', '', 'CheckCheck')}</div></div><div class="notice-tabs">${tabs.map(([id, label]) => `<button data-action="filter" data-id="${platform}:${id}" aria-pressed="${active === id}">${label}<b>${unread(id)}</b></button>`).join('')}</div>
+  return `<section><h2>${icon(platform === 'app' ? 'Smartphone' : 'Monitor')}${platform === 'app' ? 'App' : 'Web'}</h2><div class="notice-panel" data-platform="${platform}"><div class="notice-head"><strong>通知</strong><div>${iconAction(platform, '通知渠道', '', 'Settings')}${iconAction('mark-all', '全部标为已读', '', 'CheckCheck')}</div></div><div class="notice-tabs">${tabs.map(([id, label]) => `<button data-action="filter" data-id="${platform}:${id}" aria-pressed="${active === id}">${label}${unread(id) ? `<b>${unread(id)}</b>` : ''}</button>`).join('')}</div>
     ${
       show('content')
         ? BATCHES.map((b) => {
-            const pending = [
-              ...new Set(b.articles.map((a) => a.recordId)),
-            ].filter((id) => !state.read.has(id)).length;
+            const pending = [...new Set(b.articles.map(notificationId))].filter(
+              (id) => !state.read.has(id),
+            ).length;
             return `<article class="notice-record" data-record="${b.id}"><div class="notice-record-head">${avatar(b.channel)}<div><button class="channel-link" data-action="channel" data-id="${b.channel}"><strong>${channel(b.channel).name}</strong></button><small>${pending ? `${pending} 条未读通知` : '通知已读'} · ${b.articles.length} 篇内容</small></div>${pending ? '<span class="unread-dot" aria-label="未读"></span>' : ''}</div>${b.articles.map((article) => `<div class="notice-story ${state.seen.has(article.id) ? 'seen' : ''}"><button data-action="article" data-id="${b.id}:${article.id}">${escapeHtml(article.title)}</button>${state.seen.has(article.id) ? badge('已看') : ''}</div>`).join('')}</article>`;
           }).join('')
         : `<div class="empty-block">${icon('Bell')}<p>暂无${active === 'social' ? '互动' : '其他'}通知</p></div>`
     }</div></section>`;
 }
 function render() {
+  document.querySelector('#record-model').value = state.recordModel;
   document.querySelector('#preview-tabs').innerHTML = Object.entries(
     VIEW_LABELS,
   )
@@ -287,7 +296,7 @@ function render() {
         ? renderApp()
         : view === 'email'
           ? renderEmail()
-          : `<p class="sample-count-note">本页选取 ${ARTICLES.length} 篇真实内容，来源为 ${RECORD_IDS.length} 条通知，演示 ${BATCHES.length} 封邮件。下方仅统计本页样本，不是账户总未读。</p><div class="notification-stage">${renderNoticePanel('app')}${renderNoticePanel('web')}</div>`;
+          : `<p class="sample-count-note">${ARTICLES.length} 篇真实内容 · ${state.recordModel === 'target' ? '改造后按批次' : '保留历史记录'} ${recordIds().length} 条通知 · 工作邮箱 ${BATCHES.length} 封样例。仅统计本页样本，不是账户总未读。</p><div class="notification-stage">${renderNoticePanel('app')}${renderNoticePanel('web')}</div>`;
 }
 function setView(next) {
   view = next;
@@ -350,7 +359,7 @@ function openArticle(value) {
   const b = batch(batchId),
     article = b.articles.find((item) => item.id === articleId);
   if (!article) throw new Error('内容不属于该批次');
-  state.read.add(article.recordId);
+  state.read.add(notificationId(article));
   state.seen.add(articleId);
   render();
   showModal(
@@ -509,7 +518,7 @@ document.addEventListener('click', (event) => {
     return;
   }
   if (name === 'mark-all') {
-    for (const recordId of RECORD_IDS) state.read.add(recordId);
+    for (const recordId of recordIds()) state.read.add(recordId);
     render();
     toast('通知已全部标读，内容已看状态保持不变');
     return;
@@ -554,6 +563,12 @@ document.addEventListener('click', (event) => {
 });
 document.addEventListener('change', (event) => {
   const el = event.target;
+  if (el.id === 'record-model') {
+    state.recordModel = el.value;
+    state.read.clear();
+    state.seen.clear();
+    render();
+  }
   if (el.matches('[data-control]')) {
     const item = endpoint(el.dataset.id);
     if (el.dataset.control === 'enabled') {

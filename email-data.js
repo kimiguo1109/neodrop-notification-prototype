@@ -50,6 +50,7 @@ window.EMAIL_DATA = {
         {
           id: '51HamTKent9',
           recordId: 'record-1',
+          targetRecordId: 'batch-single',
           title:
             'E254｜超级厄尔尼诺来了，我们的日常所需真会因它涨价吗：完整逐字稿和精华摘要',
           excerpt:
@@ -82,6 +83,7 @@ window.EMAIL_DATA = {
         {
           id: 'ZMLJt0RxKEI',
           recordId: 'record-2',
+          targetRecordId: 'batch-multi',
           title: 'Beltic 融 730 万美元，agent 也要过安检',
           excerpt:
             'agent 拿着真证件来下单，也不代表它有权这么做。Beltic 在门口判三档：放行、加验、拦下，并留下一条是谁在动手的签名记录。',
@@ -106,6 +108,7 @@ window.EMAIL_DATA = {
         {
           id: 'AulgPn3hLBU',
           recordId: 'record-3',
+          targetRecordId: 'batch-multi',
           title: 'snag 融 400 万美元，把租房群搬上台面',
           excerpt:
             '纽约的房间分租一直跑在 Facebook 群和 Instagram 私信里；snag 把它搬上台面——刷脸对证件、租金押金进托管，平均三天租掉一间房。',
@@ -138,6 +141,7 @@ window.EMAIL_DATA = {
         {
           id: 'CRfpWGEyIaw',
           recordId: 'record-4',
+          targetRecordId: 'batch-news',
           title:
             'Zig 0.17.0、法院叫停犹他州的 VPN 年龄验证法，与一段 12 年的系外行星影像——Hacker News Top 20（2026 年 10 月 3 日）',
           excerpt:
@@ -170,6 +174,7 @@ window.EMAIL_DATA = {
         {
           id: 'qPZ3sAjGVmS',
           recordId: 'record-5',
+          targetRecordId: 'batch-podcast',
           title:
             'Muse 引爆个人助理、Astra 走进机器人、OpenAI 收入一个半月涨七成：与 Henry Yin 的「AI 季报 26Q3」｜《晚点聊》第 183 期',
           excerpt:
